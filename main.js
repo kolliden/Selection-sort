@@ -3,6 +3,7 @@
 let canvas = document.getElementById('cv');
 let ctx = canvas.getContext('2d');
 let startButton = document.getElementById('bsstart');
+let iframe = document.getElementById('wiki');
 
 canvas.width = 0;
 canvas.height = 0;
@@ -175,7 +176,9 @@ const actionsMap = {
   [ACTIONS.COMPARE]: (action, members) => {
     const [i, j] = action.data;
     members[i].setColor("blue");
-    members[j].setColor("blue");
+    if(j){
+      members[j].setColor("blue");
+    }
     playSound('sine', members[i].getValue());
   },
   [ACTIONS.CONTINUE]: (action, members) => {
@@ -208,29 +211,29 @@ const check = (array, onAction) => {
   return true;
 }
 
-/**
- * "While the array is not sorted, compare each element to the next element, and if the first element
- * is greater than the second element, swap them, and if not, continue to the next element."
- * 
- * The function takes two parameters: an array and a function. The array is the array to be sorted, and
- * the function is a callback function that is called every time the algorithm does something. The
- * callback function takes an object as a parameter, and the object has two properties: type and data.
- * The type property is a string that tells the callback function what the algorithm did, and the data
- * property is an array that contains the data that the callback function needs to do its job.
- * 
- * The callback function is called every time the algorithm does something. The algorithm does three
- * things: it compares two elements, it swaps two elements, and it continues to the next element. The
- * callback function is called with an object that has a type property of
- * @param array - The array to be sorted
- * @param onAction - a function that takes an object with two properties: type and data.
- */
 function bubbleSort(array, onAction) {
-  //Sorting things go here
+  for (let i = 0; i < array.length; i++) {
+
+    let smallest = i;
+    for(let j = i+1; j < array.length; j++) {
+      onAction({type: ACTIONS.COMPARE, data:[smallest, j]});
+      if(array[j] < array[smallest]){
+        smallest = j;
+      }
+    }
+    let tmp = array[smallest]
+    array[smallest] = array[i];
+    array[i] = tmp;
+
+    onAction({type: ACTIONS.SWAP, data: [smallest, i]});
+  }
+  check();
 }
 
 const start = () => {
   initCanvas();
   startButton.remove();
+  iframe.remove();
 
   randomArr = initRandomArr(arr);
   arrayMembers = randomArr.map((v, i) => {
@@ -238,6 +241,8 @@ const start = () => {
   });
 
   drawAll();
+
+  var startTime = performance.now()
 
   /* Calling the bubbleSort function, and passing in the randomArr array and a callback function. */
   bubbleSort(randomArr ,(action) => {
@@ -249,4 +254,7 @@ const start = () => {
       arrayMembers.forEach((m) => m.resetColor());
     }, ticks * speed);
   });
+  var endTime = performance.now()
+
+  console.log(`Took ${endTime - startTime} milliseconds`)
 }
